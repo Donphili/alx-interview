@@ -1,23 +1,20 @@
 #!/usr/bin/python3
+"""
+Has a method that calculates the fewest number of operations
+needed to result in exactly n H characters in the file.
+"""
 
 
 def minOperations(n):
     """
-    Calculates the fewest number of operations needed to transform 'H' to 'n' 'H' characters.
-    :param n: Integer, the target number of 'H' characters.
-    :return: Integer, the fewest number of operations.
+    Returns the fewest number of operations needed to result in exactly
+    n H characters in the file.
     """
-    if n <= 1:
-        return 0
-
     operations = 0
-    current_h = 1
-    clipboard = 0
-
-    while current_h < n:
-        if n % current_h == 0:
-            clipboard = current_h
-        current_h += clipboard
-        operations += 1
-
+    min_operations = 2
+    while n > 1:
+        while n % min_operations == 0:
+            operations += min_operations
+            n /= min_operations
+        min_operations += 1
     return operations
