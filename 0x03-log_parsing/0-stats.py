@@ -1,45 +1,44 @@
 #!/usr/bin/python3
-"""Log Parser"""
-
+"""log Parser"""
 import sys
-import signal
 
-# Initialize variables
-total_size = 0
-status_counts = {200: 0, 301: 0, 400: 0, 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
-line_count = 0
 
-def print_statistics():
-    print("File size: {}".format(total_size))
-    for status_code in sorted(status_counts.keys()):
-        count = status_counts[status_code]
-        if count > 0:
-            print("{}: {}".format(status_code, count))
+if __name__ == '__main__':
+    file_size = [0]
+    status_codes = {200: 0, 301: 0, 400: 0, 401: 0,
+                    403: 0, 404: 0, 405: 0, 500: 0}
 
-def signal_handler(signal, frame):
-    print_statistics()
-    sys.exit(0)
+    def print_stats():
+        """ Print statistics """
+        print('File size: {}'.format(file_size[0]))
+        for key in sorted(status_codes.keys()):
+            if status_codes[key]:
+                print('{}: {}'.format(key, status_codes[key]))
 
-# Register signal handler for CTRL+C
-signal.signal(signal.SIGINT, signal_handler)
+    def parse_line(line):
+        """ Checks the line for matches """
+        try:
+            line = line[:-1]
+            word = line.split(' ')
+            # File size is last parameter on stdout
+            file_size[0] += int(word[-1])
+            # Status code comes before file size
+            status_code = int(word[-2])
+            # Move through dictionary of status codes
+            if status_code in status_codes:
+                status_codes[status_code] += 1
+        except BaseException:
+            pass
 
-# Process stdin line by line
-for line in sys.stdin:
+    linenum = 1
     try:
-        # Parse the line
-        _, _, _, _, _, status_code_str, file_size_str = line.split(" ")
-        status_code = int(status_code_str)
-        file_size = int(file_size_str)
-        
-        # Update metrics
-        total_size += file_size
-        status_counts[status_code] += 1
-        line_count += 1
-
-        # Print statistics every 10 lines
-        if line_count % 10 == 0:
-            print_statistics()
-
-    except ValueError:
-        # Skip lines with incorrect format
-        pass
+        for line in sys.stdin:
+            parse_line(line)
+            """ print after every 10 lines """
+            if linenum % 10 == 0:
+                print_stats()
+            linenum += 1
+    except KeyboardInterrupt:
+        print_stats()
+        raise
+    print_stats()
